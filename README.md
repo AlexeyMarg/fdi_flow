@@ -20,7 +20,7 @@ fdi_flow/
 │   ├── preprocessing/         # Filters, scalers, segmenters
 │   ├── models/                # Data generators, linear and nonlinear models
 │   ├── forecasting/           # Forecasting utilities
-│   ├── fault_detection/       # Fault detection logic
+│   ├── detectors/             # Fault detection models
 │   └── dynamics_approximation/ # Approximation of unknown dynamics with ML models
 └── README.md                  # This file
 ```
@@ -55,6 +55,21 @@ fdi_flow/
 
 ### `models.utils.py`  
 - `plot_simulation_results(result)`: plots time series for system inputs, outputs, and state trajectories based on a standard simulation result dictionary.
+
+### `detectors.catboost_detectors.py`
+- `CatBoostFaultDetector`: catboost based classifier for fault detection.
+  
+### `detectors.lgbm_detectors.py`
+- `LGBMFaultDetector`: LGBM based classifier for fault detection.
+
+### `detectors.sklearn_detectors.py`
+- `KNNFaultDetector`: k-NN based classifier for fault detection.
+- `RandomForestFaultDetector`: random forest based classifier for fault detection.
+- `SVMFaultDetector`: SVM based classifier for fault detection.
+- `GradientBoostingFaultDetector`: gradient boosted trees based classifier for fault detection.
+
+### `detectors.xgb_detectors.py`
+- `XGBFaultDetector`: XGB based classifier for fault detection.
 
 
 
