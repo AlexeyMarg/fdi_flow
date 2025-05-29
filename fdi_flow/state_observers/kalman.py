@@ -1,96 +1,114 @@
 import numpy as np
 
-class MatrixKalmanFilter:
-    def __init__(self, F, H, Q, R, x_initial=None, P_initial=None):
+class KalmanFilter:
+    """
+    Класс, реализующий фильтр Калмана для линейной системы.
+    
+    Параметры:
+    - F: Матрица перехода состояния (state transition matrix)
+    - B: Матрица управления (control matrix)
+    - H: Матрица наблюдений (observation matrix)
+    - Q: Матрица ковариации шума процесса (process noise covariance)
+    - R: Матрица ковариации шума измерений (measurement noise covariance)
+    - x0: Начальное состояние (initial state estimate)
+    - P0: Начальная ковариация ошибки состояния (initial error covariance)
+
+    Пример:
+
+    dt = 1.0  # шаг времени
+    F = np.array([[1, dt], [0, 1]])  # Матрица перехода (позиция и скорость)
+    B = np.array([[0.5*dt**2], [dt]])  # Матрица управления
+    H = np.array([[1, 0]])  # Измеряем только позицию
+    Q = np.eye(2) * 0.01  # Шум процесса
+    R = np.array([[0.1]])  # Шум измерений
+
+    # Начальные условия
+    x0 = np.array([[0], [0]])  # Начальное состояние [позиция, скорость]
+    P0 = np.eye(2)  # Начальная ковариация ошибки
+
+    # Создание фильтра
+    kf = KalmanFilter(F, B, H, Q, R, x0, P0)
+
+    # Пример данных
+    u = np.array([[1.0]])  # Управление (ускорение)
+    z = np.array([[5.0]])  # Измерение
+
+    # Шаг фильтра
+    x_est, P_est = kf.step(z, u)
+    """
+    
+    def __init__(self, F, B, H, Q, R, x0, P0):
+        self.F = F  # Матрица перехода состояния
+        self.B = B  # Матрица управления
+        self.H = H  # Матрица наблюдений
+        self.Q = Q  # Шум процесса
+        self.R = R  # Шум измерений
+        self.x = x0  # Текущая оценка состояния
+        self.P = P0  # Текущая ковариация ошибки
+        
+    def predict(self, u=None):
         """
-        Фильтр Калмана.
+        Этап предсказания (прогноза)
         
         Параметры:
-            F (numpy array): матриц переходов между состояниями
-            H (numpy array): матрица наблюдения (измерений)
-            Q (numpy array): матрица ковариации процесса
-            R (numpy array): матрица ковариации наблюдений
-            x_initial (numpy array): начальное состояние
-            P_initial (numpy array): начальная ковариация ошибки
-
-        Пример использования:
-            Определим параметры системы:
-            F = np.array([[1]])               # матрица перехода
-            H = np.array([[1]])               # матрица наблюдения
-            Q = np.array([[0.01]])            # ковариация процесса
-            R = np.array([[0.1]])             # ковариация наблюдения
-            x_initial = np.array([0])         # начальное состояние
-            P_initial = np.eye(1) * 1         # начальная ковариация ошибки
-            
-            # Создаем экземпляр фильтра
-            kf = MatrixKalmanFilter(F=F, H=H, Q=Q, R=R, x_initial=x_initial, P_initial=P_initial)
-            
-            # Измерения (пример)
-            measurements = np.array([1.0, 2.0, 3.0, 4.0])
-            
-            estimates = []                    # список оцененных значений
-            
-            for z in measurements:
-                kf.step(z)
-                estimates.append(float(kf.x))  # добавляем текущую оценку
-        """
-        if x_initial is None:
-            raise ValueError('Необходимо задать начальное состояние.')
-        if P_initial is None:
-            raise ValueError('Необходимо задать начальную ковариацию ошибки.')
-            
-        self.F = F      # матрица перехода
-        self.H = H      # матрица наблюдения
-        self.Q = Q      # процесс-шум
-        self.R = R      # наблюдение-шум
-        self.x = x_initial.reshape(-1, 1)  # начальное состояние
-        self.P = P_initial  # начальная ковариация
-
-    def predict(self):
-        """
-        Шаг прогнозирования состояния.
-        Возвращает предиктивное состояние и новую ковариацию.
-        """
-        # Предсказываем новое состояние: x_(k|k-1) = F*x_(k-1|k-1)
-        x_pred = np.dot(self.F, self.x)
+        - u: Вектор управления (control vector), опционально
         
-        # Преобразуем ковариацию: P_(k|k-1) = F*P_(k-1|k-1)*F.T + Q
-        P_pred = np.dot(np.dot(self.F, self.P), self.F.T) + self.Q
+        Возвращает:
+        - x: Предсказанное состояние
+        - P: Предсказанная ковариация ошибки
+        """
+        # Прогноз состояния
+        if u is not None:
+            self.x = self.F @ self.x + self.B @ u
+        else:
+            self.x = self.F @ self.x
+            
+        # Прогноз ковариации ошибки
+        self.P = self.F @ self.P @ self.F.T + self.Q
         
-        return x_pred, P_pred
-
+        return self.x.copy(), self.P.copy()
+    
     def update(self, z):
         """
-        Шаг коррекции (обновления).
-        Аргументы:
-            z (numpy array): вектор новых измерений
+        Этап обновления (коррекции) по измерениям
+        
+        Параметры:
+        - z: Вектор измерений (measurement vector)
+        
+        Возвращает:
+        - x: Обновленная оценка состояния
+        - P: Обновленная ковариация ошибки
         """
-        # Вычисляем разность между наблюдением и моделью: y = z - H*x_
-        innovation = z.reshape(-1, 1) - np.dot(self.H, self.x)
+        # Ошибка предсказания
+        y = z - self.H @ self.x
         
-        # Ковариация инноваций: S = H*P_*H.T + R
-        S = np.dot(np.dot(self.H, self.P), self.H.T) + self.R
+        # Ковариация ошибки предсказания
+        S = self.H @ self.P @ self.H.T + self.R
         
-        # Коэффициент усиления Калмана: K = P_*H.T*S^(-1)
-        K = np.dot(np.dot(self.P, self.H.T), np.linalg.inv(S))
+        # Оптимальный коэффициент усиления Калмана
+        K = self.P @ self.H.T @ np.linalg.inv(S)
         
-        # Корректируем состояние: x_ += K*y
-        self.x += np.dot(K, innovation)
+        # Обновление оценки состояния
+        self.x = self.x + K @ y
         
-        # Обновляем ковариацию ошибки: P -= K*H*P_
-        self.P -= np.dot(np.dot(K, self.H), self.P)
-
-    def step(self, z):
+        # Обновление ковариации ошибки
+        I = np.eye(self.P.shape[0])
+        self.P = (I - K @ self.H) @ self.P
+        
+        return self.x.copy(), self.P.copy()
+    
+    def step(self, z, u=None):
         """
-        Полный шаг фильтра Калмана — предсказание и коррекция.
-        Аргументы:
-            z (numpy array): новые данные измерения
+        Полный шаг фильтра (предсказание + обновление)
+        
+        Параметры:
+        - z: Вектор измерений (measurement vector)
+        - u: Вектор управления (control vector), опционально
+        
+        Возвращает:
+        - x: Обновленная оценка состояния
+        - P: Обновленная ковариация ошибки
         """
-        x_pred, P_pred = self.predict()
-        self.x = x_pred.copy()
-        self.P = P_pred.copy()
-        self.update(z)
-
-
-
+        self.predict(u)
+        return self.update(z)
 
