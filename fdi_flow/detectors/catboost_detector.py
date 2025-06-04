@@ -7,6 +7,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import cross_val_score
 import optuna
 from optuna.samplers import TPESampler
+from optuna import Trial
 from sklearn.model_selection import RandomizedSearchCV
 from scipy.stats import uniform as sp_uniform
 from scipy.stats import randint as sp_randint
@@ -186,7 +187,7 @@ class CatBoostFaultDetector:
             X, y, test_size=test_size, random_state=self.random_state
         )
         
-        def objective(trial):
+        def objective(trial: Trial):
             params = {
                 'iterations': trial.suggest_int('iterations', 
                     self.param_search_space['iterations'][0],
@@ -228,7 +229,7 @@ class CatBoostFaultDetector:
             direction='maximize',
             sampler=TPESampler(seed=self.random_state)
         )
-        study.optimize(objective, n_trials=self.n_iter)
+        study.optimize(objective, n_trials=self.n_iter, catch = (ValueError))
         
         self.best_params_ = study.best_params
         self.model_ = CatBoostClassifier(

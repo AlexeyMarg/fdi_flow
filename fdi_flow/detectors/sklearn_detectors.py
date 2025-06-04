@@ -9,6 +9,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import StandardScaler
 import optuna
+from optuna import Trial
 from optuna.samplers import TPESampler
 from sklearn.model_selection import RandomizedSearchCV
 from scipy.stats import randint as sp_randint
@@ -141,7 +142,7 @@ class KNNFaultDetector:
             X, y, test_size=test_size, random_state=self.random_state
         )
         
-        def objective(trial):
+        def objective(trial: Trial):
             params = {
                 'n_neighbors': trial.suggest_int(
                     'n_neighbors',
@@ -182,7 +183,7 @@ class KNNFaultDetector:
             direction='maximize',
             sampler=TPESampler(seed=self.random_state)
         )
-        study.optimize(objective, n_trials=self.n_iter)
+        study.optimize(objective, n_trials=self.n_iter, catch = (ValueError))
         
         self.best_params_ = study.best_params
         self.model_ = KNeighborsClassifier(**self.best_params_)
@@ -388,7 +389,7 @@ class RandomForestFaultDetector:
             X, y, test_size=test_size, random_state=self.random_state
         )
         
-        def objective(trial):
+        def objective(trial: Trial):
             params = {
                 'n_estimators': trial.suggest_int(
                     'n_estimators',
@@ -434,7 +435,7 @@ class RandomForestFaultDetector:
             direction='maximize',
             sampler=TPESampler(seed=self.random_state)
         )
-        study.optimize(objective, n_trials=self.n_iter)
+        study.optimize(objective, n_trials=self.n_iter, catch = (ValueError))
         
         self.best_params_ = study.best_params
         self.model_ = RandomForestClassifier(**self.best_params_, random_state=self.random_state, n_jobs=-1)
@@ -682,7 +683,7 @@ class SVMFaultDetector:
             X, y, test_size=test_size, random_state=self.random_state
         )
         
-        def objective(trial):
+        def objective(trial: Trial):
             params = {
                 'C': trial.suggest_float(
                     'C',
@@ -734,7 +735,7 @@ class SVMFaultDetector:
             direction='maximize',
             sampler=TPESampler(seed=self.random_state)
         )
-        study.optimize(objective, n_trials=self.n_iter)
+        study.optimize(objective, n_trials=self.n_iter, catch = (ValueError))
         
         self.best_params_ = study.best_params
         self.model_ = SVC(**self.best_params_, random_state=self.random_state)
@@ -1006,7 +1007,7 @@ class GradientBoostingFaultDetector:
             X, y, test_size=test_size, random_state=self.random_state
         )
         
-        def objective(trial):
+        def objective(trial: Trial):
             params = {
                 'learning_rate': trial.suggest_float(
                     'learning_rate',
@@ -1059,7 +1060,7 @@ class GradientBoostingFaultDetector:
             direction='maximize',
             sampler=TPESampler(seed=self.random_state)
         )
-        study.optimize(objective, n_trials=self.n_iter)
+        study.optimize(objective, n_trials=self.n_iter, catch = (ValueError))
         
         self.best_params_ = study.best_params
         self.model_ = GradientBoostingClassifier(

@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import cross_val_score
 import optuna
+from optuna import Trial
 from optuna.samplers import TPESampler
 from sklearn.model_selection import RandomizedSearchCV
 from scipy.stats import uniform as sp_uniform
@@ -218,7 +219,7 @@ class LGBMFaultDetector:
             X, y, test_size=test_size, random_state=self.random_state
         )
         
-        def objective(trial):
+        def objective(trial: Trial):
             params = {
                 'boosting_type': trial.suggest_categorical(
                     'boosting_type',
@@ -291,7 +292,7 @@ class LGBMFaultDetector:
             direction='maximize',
             sampler=TPESampler(seed=self.random_state)
         )
-        study.optimize(objective, n_trials=self.n_iter)
+        study.optimize(objective, n_trials=self.n_iter, catch = (ValueError))
         
         self.best_params_ = study.best_params
         self.model_ = lgb.LGBMClassifier(

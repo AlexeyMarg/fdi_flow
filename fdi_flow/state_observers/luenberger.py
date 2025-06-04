@@ -47,6 +47,7 @@ class LuenbergerObserver:
             
             L = self.calculate_observer_gain(desired_poles=desired_poles)
             self.L = L
+            self.A1 = self.A - L @ self.C
         
         # Инициализация состояния наблюдателя
         if x_hat is None:
@@ -94,7 +95,7 @@ class LuenbergerObserver:
         y = np.array(y, dtype=float).reshape(-1, 1)
         
         # Уравнение наблюдателя Люенбергера
-        dx_hat = self.A @ self.x_hat + self.B @ u - self.L @ (self.C @ self.x_hat - y)
+        dx_hat = self.A1 @ self.x_hat + self.B @ u - self.L @ (self.C @ self.x_hat - y)
         
         # Простейшая интеграция (на практике следует использовать ODE solver)
         self.x_hat += dx_hat * self.dt
