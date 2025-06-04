@@ -20,7 +20,7 @@ fdi_flow/
 │   ├── preprocessing/         # Filters, scalers, segmenters
 │   ├── models/                # Data generators, linear and nonlinear models
 │   ├── forecasting/           # Forecasting utilities
-│   ├── fault_detection/       # Fault detection logic
+│   ├── detectors/             # Fault detection models
 │   └── dynamics_approximation/ # Approximation of unknown dynamics with ML models
 │   ├── state_observers/        # State observers for control utilities
 └── README.md                  # This file
@@ -62,6 +62,22 @@ fdi_flow/
 
 ### `state_observers.kalman.py`  
 - `KalmanFilter`: discrete-time Kalman filter for linear systems defined by user-specified '(F, B, H, Q, R, x0, P0)'
+=======
+### `detectors.catboost_detectors.py`
+- `CatBoostFaultDetector`: catboost based classifier for fault detection.
+  
+### `detectors.lgbm_detectors.py`
+- `LGBMFaultDetector`: LGBM based classifier for fault detection.
+
+### `detectors.sklearn_detectors.py`
+- `KNNFaultDetector`: k-NN based classifier for fault detection.
+- `RandomForestFaultDetector`: random forest based classifier for fault detection.
+- `SVMFaultDetector`: SVM based classifier for fault detection.
+- `GradientBoostingFaultDetector`: gradient boosted trees based classifier for fault detection.
+
+### `detectors.xgb_detectors.py`
+- `XGBFaultDetector`: XGB based classifier for fault detection.
+
 
 
 
