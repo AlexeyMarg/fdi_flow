@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.linalg import place_poles
+from scipy.signal import place_poles
 
 class SlidingModeObserver:
     """
@@ -59,7 +59,7 @@ class SlidingModeObserver:
         # Расчет K для скользящего режима
         C_norm = np.linalg.norm(self.C, 2)
         A_LC_norm = np.linalg.norm(A_minus_LC, 2)
-        self.K = (C_norm * A_LC_norm * self.e_max + self.eta) * np.sign(self.C)
+        self.K = (C_norm * A_LC_norm * self.e_max + self.eta) * np.ones((self.n, 1))
         
     def _smooth_sign(self, S):
         """Сглаженная функция sign для уменьшения чёттеринга"""
@@ -77,23 +77,24 @@ class SlidingModeObserver:
         Возвращает:
             dx_hat (np.ndarray): Производная оценки состояния (n x 1)
         """
+        u = np.array(u, dtype=float).reshape(-1, 1)
+        y = np.array(y, dtype=float).reshape(-1, 1)
         S = y - self.C @ x_hat  # Ошибка выхода (скользящая поверхность)
+        smo_sign_S = self._smooth_sign(S)
         dx_hat = (self.A @ x_hat + self.B @ u + 
                   self.L @ S + 
-                  self.K @ self._smooth_sign(S))
+                  self.K @ smo_sign_S)
         return dx_hat
     
-    def step(self, x_hat, y, dt):
+    def step(self, x_hat, y, dt, u):
         """
         Шаг работы наблюдателя
             
         Возвращает:
             x_hat (np.ndarray): Оценка состояния
         """
-        dx_hat = self.compute_derivative(x_hat, y, np.zeros((self.m, 1)))
+        dx_hat = self.compute_derivative(x_hat, y, u)
         x_hat += dx_hat * dt
                 
         return x_hat
     
-
-
