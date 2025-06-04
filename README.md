@@ -22,6 +22,7 @@ fdi_flow/
 │   ├── forecasting/           # Forecasting utilities
 │   ├── detectors/             # Fault detection models
 │   └── dynamics_approximation/ # Approximation of unknown dynamics with ML models
+│   ├── state_observers/        # State observers for control utilities
 └── README.md                  # This file
 ```
 
@@ -56,6 +57,12 @@ fdi_flow/
 ### `models.utils.py`  
 - `plot_simulation_results(result)`: plots time series for system inputs, outputs, and state trajectories based on a standard simulation result dictionary.
 
+### `state_observers.luenberger.py`  
+- `LuenbergerObserver`: discrete-time observer for linear systems defined by user-specified '(A, B, C, dt, x0, L (optional), desired_poles (optional)'
+
+### `state_observers.kalman.py`  
+- `KalmanFilter`: discrete-time Kalman filter for linear systems defined by user-specified '(F, B, H, Q, R, x0, P0)'
+=======
 ### `detectors.catboost_detectors.py`
 - `CatBoostFaultDetector`: catboost based classifier for fault detection.
   
@@ -70,6 +77,7 @@ fdi_flow/
 
 ### `detectors.xgb_detectors.py`
 - `XGBFaultDetector`: XGB based classifier for fault detection.
+
 
 
 
