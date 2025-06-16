@@ -1,5 +1,13 @@
 import numpy as np
 from scipy.integrate import solve_ivp
+import sys
+import os
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+from fdi_flow.dynamics_approximation.nonlinearity_approximator import MultilevelLinearRegressor
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 class NonlinearStateSpaceModel:

@@ -1,14 +1,58 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import numpy as np
-from sklearn.linear_model import Ridge, Lasso, LinearRegression
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
+
+from fdi_flow.dynamics_approximation.nonlinearity_approximator import MultilevelLinearRegressor
+
 
 class NonlinearityApproximator:
     """
     Базовый класс для аппроксимации нелинейной динамики на основе временных рядов.
     """
     def fit(self, X, y):
-        raise NotImplementedError("fit() должен быть реализован в подклассе")
+        """
+        Обучает многоуровневую модель регрессии.
+        
+        Parameters:
+            X (array-like): Входные признаки, shape (n_samples, n_features)
+            y (array-like): Целевые значения, shape (n_samples,) или (n_samples, n_targets)
+        
+        Returns:
+            self: Возвращает обученную модель
+        """
+        X = np.asarray(X)
+        y = np.asarray(y)
+        
+        # Начальные данные для первого уровня
+        X_current = X.copy()
+        y_residual = y.copy()
+        
+        self.models = []
+        self.feature_counts = [X.shape[1]]
+        
+        for level in range(self.levels):
+            # Получаем модель для текущего уровня
+            model = self._get_model()
+            
+            # Обучаем модель на текущих данных
+            model.fit(X_current, y_residual)
+            self.models.append(model)
+            
+            # Вычисляем остаток для следующего уровня
+            y_pred = model.predict(X_current)
+            y_residual = y_residual - y_pred
+            
+            # Если это не последний уровень, подготавливаем данные для следующего
+            if level < self.levels - 1:
+                # Добавляем предсказания текущего уровня к признакам
+                X_current = np.column_stack((X, y_pred))
+                self.feature_counts.append(X_current.shape[1])
+        
+        return self
 
     def predict(self, X):
         raise NotImplementedError("predict() должен быть реализован в подклассе")
